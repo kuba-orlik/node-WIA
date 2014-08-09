@@ -67,9 +67,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DeviceList.h" />
+    <ClInclude Include="DeviceObject.h" />
     <ClInclude Include="Devices.h" />
     <ClInclude Include="formats.h" />
-    <ClInclude Include="Device.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -23,13 +23,13 @@
     <ClInclude Include="formats.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Device.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Devices.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="DeviceList.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceObject.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

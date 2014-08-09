@@ -7,6 +7,7 @@
 #include "Wia.h"
 #include "comdef.h"
 #pragma comment(lib, "wiaguid")
+#include <iostream>
 
 #include "DeviceList.h"
 
@@ -22,8 +23,14 @@ int main(){
 	printf("%s\n", errMsg);
 
 	device_list devices = DeviceList::listAll();
-	printf("%ws", devices[0].getLongName());
+	printf("found %i device(s):\n", devices.size());
+	printf("%ws\n", devices[0].getLongName());
 
 
-	Sleep(20000);
+	printf("about to initiate transfer:\n");
+	devices[0].transfer();
+	printf("after transfer\n");
+
+	getchar();
+	//Sleep(20000);
 }

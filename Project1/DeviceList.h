@@ -1,25 +1,23 @@
 #define _WIN32_WINNT 0x0600
 
-#include "stdio.h"
 #include "comdef.h"
-#pragma comment(lib, "wiaguid")
-
 #include "windows.h"
 #include "winerror.h"
-#include <Wia.h>
 #include <wtypes.h>
 #include "formats.h"
-#include <vector>;
+#include <vector>
+#include <Wia.h>
+#include "DeviceObject.h"
 
-IWiaDevMgr2 * Manager = NULL;
+#pragma comment(lib, "wiaguid")
+
+IWiaDevMgr2* Manager;
 
 
 class DeviceListEntry{
-public:
-	BSTR id;
-	BSTR vendor;
-	BSTR model;
-	DeviceListEntry(IWiaPropertyStorage* property_storage){
+
+private:
+	void getAttributes(IWiaPropertyStorage* property_storage){
 		PROPSPEC propspec_array[3];
 		PROPVARIANT propvar_array[3];
 		propspec_array[0]=Formats::getProp(WIA_DIP_DEV_ID);
@@ -33,11 +31,31 @@ public:
 		vendor = propvar_array[1].bstrVal;
 		model = propvar_array[2].bstrVal;
 	}
+	HRESULT getDeviceObject(){
+		IWiaItem2* wia_item;
+		HRESULT hr = Manager->CreateDevice(0, id, &wia_item);
+		device_object = DeviceObject(wia_item);
+        return hr;
+	}
+
+public:
+	BSTR id;
+	BSTR vendor;
+	BSTR model;
+	DeviceObject device_object;
+	DeviceListEntry(IWiaPropertyStorage* property_storage){
+		getAttributes(property_storage);
+		getDeviceObject();
+	}
 	
 	BSTR getLongName(){
 		_bstr_t modelL = model;
 		_bstr_t vendorL = vendor;
 		return modelL + " (" + vendorL + ")";
+	}
+
+	void transfer(){
+		device_object.transfer();
 	}
 };
 
