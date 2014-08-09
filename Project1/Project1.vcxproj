@@ -66,6 +66,7 @@
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DeviceList.h" />
     <ClInclude Include="Devices.h" />
     <ClInclude Include="formats.h" />
     <ClInclude Include="Device.h" />

@@ -64,6 +64,7 @@ public:
 				printf("%ws\n", propvar_array[i].bstrVal);
 			};
 		}
+				
 	}
 
 };

@@ -8,7 +8,7 @@
 #include "comdef.h"
 #pragma comment(lib, "wiaguid")
 
-#include "Devices.h"
+#include "DeviceList.h"
 
 int main(){
 	//IWiaDevMgr2 * wia_manager = NULL;
@@ -21,8 +21,8 @@ int main(){
 	LPCTSTR errMsg = err.ErrorMessage();
 	printf("%s\n", errMsg);
 
-	std::vector< Device > devices = Devices::getDevices();
-
+	device_list devices = DeviceList::listAll();
+	printf("%ws", devices[0].getLongName());
 
 
 	Sleep(20000);
