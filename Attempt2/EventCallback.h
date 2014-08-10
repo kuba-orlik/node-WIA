@@ -7,8 +7,6 @@ Copyright (c) Microsoft Corporation. All rights reserved.
 #ifndef __EVENTCALLBACK__
 #define __EVENTCALLBACK__
 
-namespace WiaWrap
-{
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -78,6 +76,5 @@ private:
     CComPtr<IUnknown>  m_pDisconnectEventObject;
 };
 
-}; // namespace WiaWrap
 
 #endif //__EVENTCALLBACK__

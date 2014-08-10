@@ -4,8 +4,6 @@
 #ifndef __WIAWRAP__
 #define __WIAWRAP__
 
-namespace WiaWrap
-{
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -535,7 +533,6 @@ private:
 };
 
 
-}; // namespace WiaWrap
 
 #endif //__WIAWRAP__
 

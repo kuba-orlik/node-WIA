@@ -9,8 +9,6 @@ Copyright (c) Microsoft Corporation. All rights reserved.
 
 #include "ProgressDlg.h"
 
-namespace WiaWrap
-{
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -262,4 +260,3 @@ CProgressDlg::DialogProc(
     return FALSE;
 }
 
-}; // namespace WiaWrap

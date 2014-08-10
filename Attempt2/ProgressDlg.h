@@ -7,8 +7,7 @@ Copyright (c) Microsoft Corporation. All rights reserved.
 #ifndef __PROGRESSDLG__
 #define __PROGRESSDLG__
 
-namespace WiaWrap
-{
+
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -83,7 +82,6 @@ private:
     HANDLE  m_hInitDlg;
 };
 
-}; // namespace WiaWrap
 
 #endif //__PROGRESSDLG__
 

@@ -9,8 +9,6 @@ Copyright (c) Microsoft Corporation. All rights reserved.
 
 #include "WiaWrap.h"
 
-namespace WiaWrap
-{
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -107,7 +105,5 @@ private:
     LONG    *m_plCount;
     IStream ***m_pppStream;
 };
-
-}; // namespace WiaWrap
 
 #endif //__DATACALLBACK__

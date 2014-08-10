@@ -1,8 +1,10 @@
 #include <Wia.h>
+#include "window.h"
 #include "wia_property_access.h"
 #pragma comment(lib, "wiaguid")
 #include "structures.h"
 #include "DataCallback.h"
+#include "ProgressDlg.h"
 
 IWiaDevMgr* Manager;
 
@@ -96,7 +98,7 @@ struct scan_settings_result display_scan_settings_dialog(struct device_select_re
 }
 
 HRESULT CALLBACK DefaultProgressCallback(LONG   lStatus, LONG lPercentComplete, PVOID  pParam){
-    WiaWrap::CProgressDlg *pProgressDlg = (WiaWrap::CProgressDlg *) pParam;
+    CProgressDlg *pProgressDlg = (CProgressDlg *) pParam;
     if (pProgressDlg == NULL){
         return E_POINTER;
     }

@@ -10,8 +10,6 @@ Copyright (c) Microsoft Corporation. All rights reserved.
 #include "BitmapUtil.h"
 #include "DataCallback.h"
 
-namespace WiaWrap
-{
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -398,4 +396,3 @@ HRESULT CDataCallback::StoreBuffer()
     return S_OK;
 }
 
-}; // namespace WiaWrap
