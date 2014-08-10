@@ -12,8 +12,8 @@
 #pragma comment(lib, "wiaguid")
 #include "stdafx.h"
 #include "ProgressDlg.h"
-#include "structures.h"
 #include "wia_property_access.h"
+#include "structures.h"
 #include "scanners.h"
 
 int main(){

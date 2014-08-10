@@ -1,8 +1,9 @@
 #include <windows.h>
 
+#ifndef window_temp
+#define window_temp
 
-HWND FindMyTopMostWindow()
-{
+HWND FindMyTopMostWindow(){
     DWORD dwProcID = GetCurrentProcessId();
     HWND hWnd = GetTopWindow(GetDesktopWindow());
     while(hWnd)
@@ -15,3 +16,5 @@ HWND FindMyTopMostWindow()
     }
     return NULL;
  }
+
+#endif

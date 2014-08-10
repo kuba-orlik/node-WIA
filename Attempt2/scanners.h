@@ -5,6 +5,7 @@
 #include "structures.h"
 #include "DataCallback.h"
 #include "ProgressDlg.h"
+#include "stdafx.h"
 
 IWiaDevMgr* Manager;
 
@@ -98,7 +99,7 @@ struct scan_settings_result display_scan_settings_dialog(struct device_select_re
 }
 
 HRESULT CALLBACK DefaultProgressCallback(LONG   lStatus, LONG lPercentComplete, PVOID  pParam){
-    CProgressDlg *pProgressDlg = (CProgressDlg *) pParam;
+    WiaWrap::CProgressDlg *pProgressDlg = (WiaWrap::CProgressDlg *) pParam;
     if (pProgressDlg == NULL){
         return E_POINTER;
     }
@@ -139,6 +140,8 @@ HRESULT CALLBACK DefaultProgressCallback(LONG   lStatus, LONG lPercentComplete, 
     return S_OK;
 }
 
+
+/*
 void scan(scan_settings_result settings){
 	 CComPtr<CProgressDlg> pProgressDlg;
     if (pfnProgressCallback == NULL)
@@ -312,3 +315,5 @@ void scan(scan_settings_result settings){
         }
     }
 }
+
+*/

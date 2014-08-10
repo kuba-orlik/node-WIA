@@ -73,7 +73,7 @@ private:
     LONG  m_nNumImages;
     BOOL  m_bDisplayWaitCursor;
 
-    CComPtr<CEventCallback>  m_pEventCallback;
+    CComPtr<WiaWrap::CEventCallback>  m_pEventCallback;
 };
 
 #endif //__MAINWND__

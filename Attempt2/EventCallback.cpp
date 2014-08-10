@@ -10,6 +10,8 @@ Copyright (c) Microsoft Corporation. All rights reserved.
 #include "WiaWrap.h"
 #include "EventCallback.h"
 
+namespace WiaWrap
+{
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -168,3 +170,4 @@ ULONG CEventCallback::GetNumDevices() const
     return m_nNumDevices;
 }
 
+}; // namespace WiaWrap

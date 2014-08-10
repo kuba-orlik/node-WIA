@@ -24,7 +24,7 @@ CMainWindow::CMainWindow()
 
     m_bDisplayWaitCursor = FALSE;
 
-    m_pEventCallback = new CEventCallback;
+    m_pEventCallback = new WiaWrap::CEventCallback;
 
     if (m_pEventCallback != NULL)
     {
@@ -301,9 +301,9 @@ LRESULT CMainWindow::OnFromScannerOrCamera()
 
     // Launch the get image dialog
 
-    CComPtrArray<IStream> ppStream;
+    WiaWrap::CComPtrArray<IStream> ppStream;
 
-    hr = WiaGetImage(
+    hr = WiaWrap::WiaGetImage(
         m_hMDIClient,
         StiDeviceTypeDefault,
         0,
