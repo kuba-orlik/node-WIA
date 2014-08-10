@@ -4,16 +4,11 @@
 #include <iostream>
 #include <vector>
 #include "windows.h"
-#include "window.h"
 #include "winerror.h"
 #include "Wia.h"
 #include <WiaDef.h>
 #include "comdef.h"
 #pragma comment(lib, "wiaguid")
-#include "stdafx.h"
-#include "ProgressDlg.h"
-#include "wia_property_access.h"
-#include "structures.h"
 #include "scanners.h"
 
 int main(){

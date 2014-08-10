@@ -1,3 +1,4 @@
+#include "StdAfx.h"
 #ifndef prop_accs
 #define prop_accs
 

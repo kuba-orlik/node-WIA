@@ -8,6 +8,7 @@ Copyright (c) Microsoft Corporation. All rights reserved.
 #define __DATACALLBACK__
 
 #include "WiaWrap.h"
+#include <istream>
 
 namespace WiaWrap
 {
