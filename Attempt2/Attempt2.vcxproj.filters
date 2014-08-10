@@ -77,5 +77,14 @@
     <ClInclude Include="window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="structures.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wia_property_access.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scanners.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

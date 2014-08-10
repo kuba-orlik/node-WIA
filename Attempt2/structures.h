@@ -4,11 +4,17 @@
 #define IDS_STATUS_TRANSFER_TO_CLIENT   7
 #define IDS_ERROR_GET_IMAGE_DLG         8
 
+
+#ifndef structures
+#define structures
+
+
 struct device_select_result{
 	bool found;
 	BSTR device_id;
 	IWiaItem* p_wia_item;
 };
+
 
 struct scan_settings_result{
 	LONG item_count;
@@ -17,3 +23,5 @@ struct scan_settings_result{
 	bool document_feader;
 	IWiaItem* wia_root_item;
 };
+
+#endif

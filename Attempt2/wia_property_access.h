@@ -1,4 +1,7 @@
-HRESULT ReadPropertyLong(IWiaPropertyStorage *pWiaPropertyStorage, const PROPSPEC      *pPropSpec, LONG *plResult){
+#ifndef prop_accs
+#define prop_accs
+
+HRESULT ReadPropertyLong(IWiaPropertyStorage *pWiaPropertyStorage, const PROPSPEC *pPropSpec, LONG *plResult){
     PROPVARIANT PropVariant;
     HRESULT hr = pWiaPropertyStorage->ReadMultiple(1, pPropSpec, &PropVariant);
     if (SUCCEEDED(hr)){
@@ -52,3 +55,5 @@ HRESULT ReadPropertyLong(IWiaPropertyStorage *pWiaPropertyStorage, const PROPSPE
     PropVariantClear(&PropVariant);
     return hr;
 }
+
+#endif

@@ -71,8 +71,11 @@
     <ClInclude Include="MainWnd.h" />
     <ClInclude Include="ProgressDlg.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="scanners.h" />
     <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="structures.h" />
     <ClInclude Include="WiaWrap.h" />
+    <ClInclude Include="wia_property_access.h" />
     <ClInclude Include="window.h" />
   </ItemGroup>
   <ItemGroup>
