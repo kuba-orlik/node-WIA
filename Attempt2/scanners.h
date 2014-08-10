@@ -2,6 +2,7 @@
 #include "wia_property_access.h"
 #pragma comment(lib, "wiaguid")
 #include "structures.h"
+#include "DataCallback.h"
 
 IWiaDevMgr* Manager;
 
@@ -134,4 +135,178 @@ HRESULT CALLBACK DefaultProgressCallback(LONG   lStatus, LONG lPercentComplete, 
     pProgressDlg->SetMessage(szStatusText);
     pProgressDlg->SetPercent(lPercentComplete);
     return S_OK;
+}
+
+void scan(scan_settings_result settings){
+	 CComPtr<CProgressDlg> pProgressDlg;
+    if (pfnProgressCallback == NULL)
+    {
+        pfnProgressCallback = DefaultProgressCallback;
+
+        pProgressDlg = new CProgressDlg(hWndParent);
+
+        pProgressCallbackParam = (CProgressDlg *) pProgressDlg;
+    }
+
+    // Create the data callback interface
+
+    CComPtr<CDataCallback> pDataCallback = new CDataCallback(
+        pfnProgressCallback,
+        pProgressCallbackParam,
+        plCount, 
+        pppStream
+    );
+
+    if (pDataCallback == NULL)
+    {
+        return E_OUTOFMEMORY;
+    }
+
+    // Start the transfer of the selected items
+
+    for (int i = 0; i < ppIWiaItem.Count(); ++i)
+    {
+        // Get the interface pointers
+
+        CComQIPtr<IWiaPropertyStorage> pWiaPropertyStorage(ppIWiaItem[i]);
+
+        if (pWiaPropertyStorage == NULL)
+        {
+            return E_NOINTERFACE;
+        }
+
+        CComQIPtr<IWiaDataTransfer> pIWiaDataTransfer(ppIWiaItem[i]);
+
+        if (pIWiaDataTransfer == NULL)
+        {
+            return E_NOINTERFACE;
+        }
+
+        // Set the transfer type
+
+        PROPSPEC specTymed;
+
+        specTymed.ulKind = PRSPEC_PROPID;
+        specTymed.propid = WIA_IPA_TYMED;
+
+        PROPVARIANT varTymed;
+
+        varTymed.vt = VT_I4;
+        varTymed.lVal = TYMED_CALLBACK;
+
+        hr = pWiaPropertyStorage->WriteMultiple(
+            1,
+            &specTymed,
+            &varTymed,
+            WIA_IPA_FIRST
+        );
+
+        PropVariantClear(&varTymed);
+
+        if (FAILED(hr))
+        {
+            return hr;
+        }
+
+        // If there is no transfer format specified, use the device default
+
+        GUID guidFormat = GUID_NULL;
+
+        if (pguidFormat == NULL)
+        {
+            pguidFormat = &guidFormat;
+        }
+
+        if (*pguidFormat == GUID_NULL)
+        {
+            PROPSPEC specPreferredFormat;
+
+            specPreferredFormat.ulKind = PRSPEC_PROPID;
+            specPreferredFormat.propid = WIA_IPA_PREFERRED_FORMAT;
+
+            hr = ReadPropertyGuid(
+                pWiaPropertyStorage,
+                &specPreferredFormat,
+                pguidFormat
+            );
+
+            if (FAILED(hr))
+            {
+                return hr;
+            }
+        }
+
+        // Set the transfer format
+
+        PROPSPEC specFormat;
+
+        specFormat.ulKind = PRSPEC_PROPID;
+        specFormat.propid = WIA_IPA_FORMAT;
+
+        PROPVARIANT varFormat;
+
+        varFormat.vt = VT_CLSID;
+        varFormat.puuid = (CLSID *) CoTaskMemAlloc(sizeof(CLSID));
+
+        if (varFormat.puuid == NULL)
+        {
+            return E_OUTOFMEMORY;
+        }
+
+        *varFormat.puuid = *pguidFormat;
+
+        hr = pWiaPropertyStorage->WriteMultiple(
+            1,
+            &specFormat,
+            &varFormat,
+            WIA_IPA_FIRST
+        );
+
+        PropVariantClear(&varFormat);
+
+        if (FAILED(hr))
+        {
+            return hr;
+        }
+
+        // Read the transfer buffer size from the device, default to 64K
+
+        PROPSPEC specBufferSize;
+
+        specBufferSize.ulKind = PRSPEC_PROPID;
+        specBufferSize.propid = WIA_IPA_BUFFER_SIZE;
+
+        LONG nBufferSize;
+
+        hr = ReadPropertyLong(
+            pWiaPropertyStorage, 
+            &specBufferSize, 
+            &nBufferSize
+        );
+
+        if (FAILED(hr))
+        {
+            nBufferSize = 64 * 1024;
+        }
+
+        // Choose double buffered transfer for better performance
+
+        WIA_DATA_TRANSFER_INFO WiaDataTransferInfo = { 0 };
+
+        WiaDataTransferInfo.ulSize        = sizeof(WIA_DATA_TRANSFER_INFO);
+        WiaDataTransferInfo.ulBufferSize  = 2 * nBufferSize;
+        WiaDataTransferInfo.bDoubleBuffer = TRUE;
+
+        // Start the transfer
+
+        hr = pIWiaDataTransfer->idtGetBandedData(
+            &WiaDataTransferInfo,
+            pDataCallback
+        );
+
+        if (FAILED(hr) || hr == S_FALSE)
+        {
+            return hr;
+        }
+    }
 }
