@@ -1,3 +1,9 @@
+#define IDS_WAIT                        4
+#define IDS_STATUS_TRANSFER_FROM_DEVICE 5
+#define IDS_STATUS_PROCESSING_DATA      6
+#define IDS_STATUS_TRANSFER_TO_CLIENT   7
+#define IDS_ERROR_GET_IMAGE_DLG         8
+
 struct device_select_result{
 	bool found;
 	BSTR device_id;
