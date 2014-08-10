@@ -1,34 +1,293 @@
 #define _WIN32_WINNT 0x0600
 
 #include "stdio.h"
+#include <iostream>
 #include <vector>
 #include "windows.h"
 #include "winerror.h"
 #include "Wia.h"
+#include <WiaDef.h>
 #include "comdef.h"
 #pragma comment(lib, "wiaguid")
-#include <iostream>
+#include "stdafx.h"
 
-#include "WiaWrap.h"
+#define IDS_WAIT                        4
+#define IDS_STATUS_TRANSFER_FROM_DEVICE 5
+#define IDS_STATUS_PROCESSING_DATA      6
+#define IDS_STATUS_TRANSFER_TO_CLIENT   7
+#define IDS_ERROR_GET_IMAGE_DLG         8
 
 
 IWiaDevMgr* Manager;
 
-#include "temp_window.h"
 
-int main(){
+HWND FindMyTopMostWindow()
+{
+    DWORD dwProcID = GetCurrentProcessId();
+    HWND hWnd = GetTopWindow(GetDesktopWindow());
+    while(hWnd)
+    {
+        DWORD dwWndProcID = 0;
+        GetWindowThreadProcessId(hWnd, &dwWndProcID);
+        if(dwWndProcID == dwProcID)
+            return hWnd;            
+        hWnd = GetNextWindow(hWnd, GW_HWNDNEXT);
+    }
+    return NULL;
+ }
+
+struct device_select_result{
+	bool found;
+	BSTR device_id;
+	IWiaItem* p_wia_item;
+};
+
+void init_wia_manager(){
 	Manager = NULL;
-	CoInitialize(nullptr);
 	CoCreateInstance( CLSID_WiaDevMgr, NULL, CLSCTX_LOCAL_SERVER, IID_IWiaDevMgr, (void**)&Manager ); 
-	ULONG number = 0;
-	WiaWrap::WiaGetNumDevices(Manager, &number);
-	printf("%i\n", number);
-	//HWND temp_window = create_temp_window();
-	HWND console_window = GetConsoleWindow();
-	printf("%i\n", console_window);
+}
+
+struct device_select_result select_device(bool force_display_dialog=false){
+	CoInitialize(nullptr);
+	init_wia_manager();
+	HWND current_handle= FindMyTopMostWindow();
 	BSTR device_id;
 	IWiaItem* item;
-	Manager->SelectDeviceDlg(console_window, StiDeviceTypeScanner, WIA_SELECT_DEVICE_NODEFAULT, &device_id,  &item);
+	long flags = 0;
+	if(force_display_dialog){
+		flags = WIA_SELECT_DEVICE_NODEFAULT;
+	}
+	Manager->SelectDeviceDlg(current_handle, StiDeviceTypeScanner, flags, &device_id,  &item);
+	bool found = (device_id!=NULL);
+	device_select_result ret={found, device_id, item};
+	return ret;
+}
+
+struct scan_settings_result{
+	LONG item_count;
+	IWiaItem** wia_item_array;
+	bool error;
+	bool document_feader;
+};
+
+HRESULT ReadPropertyLong(IWiaPropertyStorage *pWiaPropertyStorage, const PROPSPEC      *pPropSpec, LONG *plResult){
+    PROPVARIANT PropVariant;
+    HRESULT hr = pWiaPropertyStorage->ReadMultiple(1, pPropSpec, &PropVariant);
+    if (SUCCEEDED(hr)){
+		switch (PropVariant.vt){
+            case VT_I1:{
+                *plResult = (LONG) PropVariant.cVal;
+                hr = S_OK;
+                break;
+            }case VT_UI1:{
+                *plResult = (LONG) PropVariant.bVal;
+                hr = S_OK;
+                break;
+            }case VT_I2:{
+                *plResult = (LONG) PropVariant.iVal;
+                hr = S_OK;
+                break;
+            }case VT_UI2:{
+                *plResult = (LONG) PropVariant.uiVal;
+                hr = S_OK;
+                break;
+            }case VT_I4:{
+                *plResult = (LONG) PropVariant.lVal;
+                hr = S_OK;
+                break;
+            }case VT_UI4:{
+                *plResult = (LONG) PropVariant.ulVal;
+                hr = S_OK;
+                break;
+            }case VT_INT:{
+                *plResult = (LONG) PropVariant.intVal;
+                hr = S_OK;
+                break;
+            }case VT_UINT:{
+                *plResult = (LONG) PropVariant.uintVal;
+                hr = S_OK;
+                break;
+            }case VT_R4:{
+                *plResult = (LONG) (PropVariant.fltVal + 0.5);
+                hr = S_OK;
+                break;
+            }case VT_R8:{
+                *plResult = (LONG) (PropVariant.dblVal + 0.5);
+                hr = S_OK;
+                break;
+            }default:{
+                hr = E_FAIL;
+                break;
+            }
+        }
+    }
+    PropVariantClear(&PropVariant);
+    return hr;
+}
+
+bool item_has_feeder(IWiaItem* p_wia_item){
+	PROPSPEC specDocumentHandlingSelect;
+
+    specDocumentHandlingSelect.ulKind = PRSPEC_PROPID;
+    specDocumentHandlingSelect.propid = WIA_DPS_DOCUMENT_HANDLING_SELECT;
+
+    LONG nDocumentHandlingSelect;
+	CComQIPtr<IWiaPropertyStorage> pWiaRootPropertyStorage(p_wia_item);
+    HRESULT hr = ReadPropertyLong(
+        pWiaRootPropertyStorage, 
+        &specDocumentHandlingSelect, 
+        &nDocumentHandlingSelect
+    );
+    if (SUCCEEDED(hr) && (nDocumentHandlingSelect & FEEDER)){
+		return true;
+	}else{
+		return false;
+	}
+};
+
+void tell_scanner_to_scan_all_pages(IWiaItem* p_wia_item){
+	PROPSPEC specPages;
+    specPages.ulKind = PRSPEC_PROPID;
+    specPages.propid = WIA_DPS_PAGES;
+
+    PROPVARIANT varPages;
+                    
+    varPages.vt = VT_I4;
+    varPages.lVal = ALL_PAGES;
+
+	CComQIPtr<IWiaPropertyStorage> pWiaRootPropertyStorage(p_wia_item);
+    pWiaRootPropertyStorage->WriteMultiple(
+        1,
+        &specPages,
+        &varPages,
+        WIA_DPS_FIRST
+    );
+                
+    PropVariantClear(&varPages);
+}
+
+class CProgressDlg : public IUnknown
+{
+public:
+    CProgressDlg(HWND hWndParent);
+    ~CProgressDlg();
+
+    // IUnknown interface
+
+    STDMETHOD(QueryInterface)(REFIID iid, LPVOID *ppvObj);
+    STDMETHOD_(ULONG, AddRef)();
+    STDMETHOD_(ULONG, Release)();
+
+    // CProgressDlg methods
+
+    BOOL Cancelled() const;
+
+    VOID SetTitle(PCTSTR pszTitle);
+    VOID SetMessage(PCTSTR pszMessage);
+    VOID SetPercent(UINT nPercent);
+
+private:
+    static DWORD WINAPI ThreadProc(PVOID pParameter);
+    static INT_PTR CALLBACK DialogProc(HWND, UINT, WPARAM, LPARAM);
+
+private:
+    LONG    m_cRef;
+	HWND    m_hDlg;
+	HWND    m_hWndParent;
+    LONG    m_bCancelled;
+    HANDLE  m_hInitDlg;
+};
+
+HRESULT CALLBACK DefaultProgressCallback(LONG   lStatus, LONG lPercentComplete, PVOID  pParam){
+    CProgressDlg *pProgressDlg = (CProgressDlg *) pParam;
+    if (pProgressDlg == NULL){
+        return E_POINTER;
+    }
+    if (pProgressDlg->Cancelled()){
+        return S_FALSE;
+    }
+	UINT uID;
+    switch (lStatus){
+        case IT_STATUS_TRANSFER_FROM_DEVICE:
+		{
+			uID = IDS_STATUS_TRANSFER_FROM_DEVICE;
+            break;
+		}
+
+        case IT_STATUS_PROCESSING_DATA:
+		{
+            uID = IDS_STATUS_PROCESSING_DATA;
+            break;
+		}
+
+        case IT_STATUS_TRANSFER_TO_CLIENT:
+		{
+            uID = IDS_STATUS_TRANSFER_TO_CLIENT;
+            break;
+		}
+
+		default:
+		{
+			return E_INVALIDARG;
+		}
+    }		
+
+    TCHAR szFormat[DEFAULT_STRING_SIZE] = _T("%d");
+
+    LoadString(g_hInstance, uID, szFormat, COUNTOF(szFormat));
+
+    TCHAR szStatusText[DEFAULT_STRING_SIZE];
+
+    _sntprintf_s(szStatusText, COUNTOF(szStatusText), COUNTOF(szStatusText) - 1, szFormat, lPercentComplete);
+
+    szStatusText[COUNTOF(szStatusText) - 1] = _T('\0');
+
+    // Update the progress bar values
+
+    pProgressDlg->SetMessage(szStatusText);
+
+    pProgressDlg->SetPercent(lPercentComplete);
+
+    return S_OK;
+}
+
+
+struct scan_settings_result display_scan_settings_dialog(struct device_select_result sel_res, bool single_image = false){
+	scan_settings_result ret;
+	ret.error = false;
+	if(!sel_res.found){
+		ret.item_count=0;
+		ret.error = true;
+	}
+	HWND current_window = FindMyTopMostWindow();
+	LONG item_count;
+	IWiaItem** ppIWiaItem;
+	LONG flags = 0; //intent flag - see http://msdn.microsoft.com/en-us/library/windows/desktop/ms630190(v=vs.85).aspx
+	if(single_image){
+		flags|=WIA_DEVICE_DIALOG_SINGLE_IMAGE;
+	}
+	HRESULT hr = sel_res.p_wia_item->DeviceDlg(
+        current_window,
+        WIA_DEVICE_DIALOG_USE_COMMON_UI,
+        flags,
+		&item_count,
+        &ppIWiaItem
+    );
+	ret.item_count = item_count;
+	ret.wia_item_array = ppIWiaItem;
+	return ret;	
+}
+
+int main(){
+	device_select_result res = select_device();
+	if(res.found){
+		printf("found");
+	}else{
+		printf("not found");
+	}
+	printf("choice: %ws.\n", res.device_id);
+	struct scan_settings_result set_res =  display_scan_settings_dialog(res);
+	printf("amount of items: %i\n", set_res.item_count);
 	printf("after dialog");
 	getchar();
 	return 0;

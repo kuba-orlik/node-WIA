@@ -72,10 +72,10 @@
     <ClInclude Include="ProgressDlg.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="StdAfx.h" />
-    <ClInclude Include="temp_window.h" />
     <ClInclude Include="WiaWrap.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\Dropbox\Desktop\getimage\WiaWrap.cpp" />
     <ClCompile Include="BitmapUtil.cpp" />
     <ClCompile Include="BitmapWnd.cpp" />
     <ClCompile Include="DataCallback.cpp" />
@@ -85,7 +85,6 @@
     <ClCompile Include="MainWnd.cpp" />
     <ClCompile Include="ProgressDlg.cpp" />
     <ClCompile Include="StdAfx.cpp" />
-    <ClCompile Include="WiaWrap.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
