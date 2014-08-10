@@ -4,12 +4,14 @@
 #include <iostream>
 #include <vector>
 #include "windows.h"
+#include "window.h"
 #include "winerror.h"
 #include "Wia.h"
 #include <WiaDef.h>
 #include "comdef.h"
 #pragma comment(lib, "wiaguid")
 #include "stdafx.h"
+#include "ProgressDlg.h"
 
 #define IDS_WAIT                        4
 #define IDS_STATUS_TRANSFER_FROM_DEVICE 5
@@ -19,22 +21,6 @@
 
 
 IWiaDevMgr* Manager;
-
-
-HWND FindMyTopMostWindow()
-{
-    DWORD dwProcID = GetCurrentProcessId();
-    HWND hWnd = GetTopWindow(GetDesktopWindow());
-    while(hWnd)
-    {
-        DWORD dwWndProcID = 0;
-        GetWindowThreadProcessId(hWnd, &dwWndProcID);
-        if(dwWndProcID == dwProcID)
-            return hWnd;            
-        hWnd = GetNextWindow(hWnd, GW_HWNDNEXT);
-    }
-    return NULL;
- }
 
 struct device_select_result{
 	bool found;
@@ -68,6 +54,7 @@ struct scan_settings_result{
 	IWiaItem** wia_item_array;
 	bool error;
 	bool document_feader;
+	IWiaItem* wia_root_item;
 };
 
 HRESULT ReadPropertyLong(IWiaPropertyStorage *pWiaPropertyStorage, const PROPSPEC      *pPropSpec, LONG *plResult){
@@ -166,40 +153,10 @@ void tell_scanner_to_scan_all_pages(IWiaItem* p_wia_item){
     PropVariantClear(&varPages);
 }
 
-class CProgressDlg : public IUnknown
-{
-public:
-    CProgressDlg(HWND hWndParent);
-    ~CProgressDlg();
 
-    // IUnknown interface
-
-    STDMETHOD(QueryInterface)(REFIID iid, LPVOID *ppvObj);
-    STDMETHOD_(ULONG, AddRef)();
-    STDMETHOD_(ULONG, Release)();
-
-    // CProgressDlg methods
-
-    BOOL Cancelled() const;
-
-    VOID SetTitle(PCTSTR pszTitle);
-    VOID SetMessage(PCTSTR pszMessage);
-    VOID SetPercent(UINT nPercent);
-
-private:
-    static DWORD WINAPI ThreadProc(PVOID pParameter);
-    static INT_PTR CALLBACK DialogProc(HWND, UINT, WPARAM, LPARAM);
-
-private:
-    LONG    m_cRef;
-	HWND    m_hDlg;
-	HWND    m_hWndParent;
-    LONG    m_bCancelled;
-    HANDLE  m_hInitDlg;
-};
 
 HRESULT CALLBACK DefaultProgressCallback(LONG   lStatus, LONG lPercentComplete, PVOID  pParam){
-    CProgressDlg *pProgressDlg = (CProgressDlg *) pParam;
+    WiaWrap::CProgressDlg *pProgressDlg = (WiaWrap::CProgressDlg *) pParam;
     if (pProgressDlg == NULL){
         return E_POINTER;
     }
@@ -275,6 +232,7 @@ struct scan_settings_result display_scan_settings_dialog(struct device_select_re
     );
 	ret.item_count = item_count;
 	ret.wia_item_array = ppIWiaItem;
+	ret.wia_root_item = sel_res.p_wia_item;
 	return ret;	
 }
 
