@@ -12,6 +12,7 @@
 #pragma comment(lib, "wiaguid")
 #include "stdafx.h"
 #include "ProgressDlg.h"
+#include "structures.h"
 
 #define IDS_WAIT                        4
 #define IDS_STATUS_TRANSFER_FROM_DEVICE 5
@@ -21,12 +22,6 @@
 
 
 IWiaDevMgr* Manager;
-
-struct device_select_result{
-	bool found;
-	BSTR device_id;
-	IWiaItem* p_wia_item;
-};
 
 void init_wia_manager(){
 	Manager = NULL;
@@ -48,14 +43,6 @@ struct device_select_result select_device(bool force_display_dialog=false){
 	device_select_result ret={found, device_id, item};
 	return ret;
 }
-
-struct scan_settings_result{
-	LONG item_count;
-	IWiaItem** wia_item_array;
-	bool error;
-	bool document_feader;
-	IWiaItem* wia_root_item;
-};
 
 HRESULT ReadPropertyLong(IWiaPropertyStorage *pWiaPropertyStorage, const PROPSPEC      *pPropSpec, LONG *plResult){
     PROPVARIANT PropVariant;
