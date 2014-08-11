@@ -1,7 +1,3 @@
-//{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
-// Used by GetImage.rc
-//
 #define WINDOW_MENU_POSITION            1
 #define IDS_APP_NAME                    1
 #define IDS_MAIN_WINDOW_TITLE           2

@@ -6,6 +6,7 @@
 #include "DataCallback.h"
 #include "ProgressDlg.h"
 #include "stdafx.h"
+#include <dlgs.h>
 
 IWiaDevMgr* Manager;
 

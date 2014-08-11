@@ -180,19 +180,6 @@ DWORD WINAPI CProgressDlg::ThreadProc(PVOID pParameter)
 {
     CProgressDlg *that = (CProgressDlg *) pParameter;
 
-	Buffer dlgTemplate;
-	DLGTEMPLATE temp;
-	temp.style = WS_POPUP | WS_BORDER | WS_SYSMENU | DS_CENTER | DS_MODALFRAME | WS_CAPTION | DS_SETFONT;
-	temp.dwExtendedStyle = 0;
-	temp.cdit = numItems;
-	temp.x = 0;
-	temp.y = 0;
-	temp.cx = width;
-	temp.cy = height;
-	dlgTemplate.write(&temp, sizeof(temp));
-	dlgTemplate.writeShort(0);   //no menu
-	dlgTemplate.writeShort(0); 
-
     INT_PTR nResult = DialogBoxParam(
         g_hInstance,
         MAKEINTRESOURCE(IDD_PROGRESS),
