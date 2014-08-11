@@ -151,7 +151,7 @@ void scan(scan_settings_result settings){
     // Create the data callback interface
 
 	LONG item_count;
-	IStream ** streams;
+	IStream ** streams = (IStream **) CoTaskMemAlloc(0);//That line fixed many things. It was very hard to come up with!	
 
     CComPtr<WiaWrap::CDataCallback> pDataCallback = new WiaWrap::CDataCallback(
         DefaultProgressCallback,

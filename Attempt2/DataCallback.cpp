@@ -7,6 +7,11 @@ Copyright (c) Microsoft Corporation. All rights reserved.
 #include "stdafx.h"
 #include "resource.h"
 
+#include <iostream>
+#include <fstream>
+#include <istream>
+#include <iterator>
+
 #include "BitmapUtil.h"
 #include "DataCallback.h"
 
@@ -133,10 +138,10 @@ STDMETHODIMP CDataCallback::BandedDataCallback(
 
             if (pHeader != NULL && pHeader->lBufferSize != 0)
             {
+				printf("known size. reallocating buffer\n");
                 hr = ReAllocBuffer(m_nHeaderSize + pHeader->lBufferSize);
 
-                if (FAILED(hr))
-                {
+                if (FAILED(hr)){
                     return hr;
                 }
             }
@@ -147,6 +152,8 @@ STDMETHODIMP CDataCallback::BandedDataCallback(
         case IT_MSG_DATA:
         {
             // Invoke the callback function
+
+			printf("receiving data\n");
 
             hr = m_pfnProgressCallback(lStatus, lPercentComplete, m_pProgressCallbackParam);
 
@@ -219,6 +226,7 @@ STDMETHODIMP CDataCallback::BandedDataCallback(
         case IT_MSG_TERMINATION:
         case IT_MSG_NEW_PAGE:
         {
+			printf("temination\n");
             if (m_pStream != NULL)
             {
                 // For BMP files, we should validate the the image header
@@ -258,6 +266,17 @@ STDMETHODIMP CDataCallback::BandedDataCallback(
                     {
                         BitmapUtil::FillBitmapFileHeader(pBuffer + 1, pBuffer);
                     }
+
+					printf("saving file...");
+
+					std::ofstream myfile;
+					myfile.open ("temp.txt");
+					//myfile << "Writing this to a file.\n";
+					//myfile << m_pStream;
+					//std::copy(std::istream_iterator<char>(m_pStream), std::istream_iterator<char>(), std::ostream_iterator<char>(cout));
+					myfile.close();
+
+					printf("saved file\n");
 
                     GlobalUnlock(hBuffer);
                 }
@@ -359,17 +378,17 @@ HRESULT CDataCallback::StoreBuffer()
     // Increase the successfully transferred buffers array size
 
     int nAllocSize = (*m_plCount + 1) * sizeof(IStream *);
-    IStream **ppStream = (IStream **) CoTaskMemRealloc(
+	IStream **ppStream = (IStream **) CoTaskMemRealloc(
 		*m_pppStream, 
 		nAllocSize
 	);
 
-    if (ppStream == NULL)
-    {
+    if (ppStream == NULL){
         return E_OUTOFMEMORY;
     }
 
     *m_pppStream = ppStream;
+	
 
     // Rewind the current buffer
 
@@ -391,7 +410,9 @@ HRESULT CDataCallback::StoreBuffer()
 
     // Reset the current buffer
 
-    m_pStream.Release();
+    //end custom try
+	
+	m_pStream.Release();
 
     m_nDataSize = 0;
 

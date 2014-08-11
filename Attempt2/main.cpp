@@ -8,6 +8,8 @@
 #include "Wia.h"
 #include <WiaDef.h>
 #include "comdef.h"
+#include "WiaWrap.h"
+
 #pragma comment(lib, "wiaguid")
 #include "scanners.h"
 
