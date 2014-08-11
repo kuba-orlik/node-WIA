@@ -18,6 +18,7 @@ struct device_select_result select_device(bool force_display_dialog=false){
 	CoInitialize(nullptr);
 	init_wia_manager();
 	HWND current_handle= FindMyTopMostWindow();
+	//HWND current_handle= NULL;  // use when finding windows would be trublesome
 	BSTR device_id;
 	IWiaItem* item;
 	long flags = 0;
@@ -142,23 +143,25 @@ HRESULT CALLBACK DefaultProgressCallback(LONG   lStatus, LONG lPercentComplete, 
 
 void scan(scan_settings_result settings){
 	CComPtr<WiaWrap::CProgressDlg> pProgressDlg;
-	pfnProgressCallback = DefaultProgressCallback;
-	pProgressDlg = new CProgressDlg(hWndParent);
-	pProgressCallbackParam = (CProgressDlg *) pProgressDlg;
+	//HRESULT CALLBACK pfnProgressCallback = DefaultProgressCallback;
+	pProgressDlg = new WiaWrap::CProgressDlg(FindMyTopMostWindow());
+	PVOID pProgressCallbackParam = (WiaWrap::CProgressDlg *) pProgressDlg;
 
     // Create the data callback interface
 
-    CComPtr<CDataCallback> pDataCallback = new CDataCallback(
-        pfnProgressCallback,
-        pProgressCallbackParam,
-        plCount, 
-        pppStream
-    );
-    // Start the transfer of the selected items
+	LONG item_count;
+	IStream ** streams;
 
-    for (int i = 0; i < ppIWiaItem.Count(); ++i){
-        CComQIPtr<IWiaPropertyStorage> pWiaPropertyStorage(ppIWiaItem[i]);
-        CComQIPtr<IWiaDataTransfer> pIWiaDataTransfer(ppIWiaItem[i]);
+    CComPtr<WiaWrap::CDataCallback> pDataCallback = new WiaWrap::CDataCallback(
+        DefaultProgressCallback,
+        pProgressCallbackParam,
+        &item_count, 
+        &streams
+    );
+
+	for (int i = 0; i < settings.item_count; ++i){
+		CComQIPtr<IWiaPropertyStorage> pWiaPropertyStorage(settings.wia_item_array[i]);
+		CComQIPtr<IWiaDataTransfer> pIWiaDataTransfer(settings.wia_item_array[i]);
         PROPSPEC specTymed;
 
         specTymed.ulKind = PRSPEC_PROPID;
@@ -184,9 +187,13 @@ void scan(scan_settings_result settings){
 		// If there is no transfer format specified, use the device default
 
         GUID guidFormat = GUID_NULL;
+
+		GUID* pguidFormat = NULL;//needs to be changed if I want to have a specific image format by default
+
         if (pguidFormat == NULL){
             pguidFormat = &guidFormat;
         }
+
         if (*pguidFormat == GUID_NULL){
             PROPSPEC specPreferredFormat;
             specPreferredFormat.ulKind = PRSPEC_PROPID;
@@ -267,4 +274,3 @@ void scan(scan_settings_result settings){
         }
     }
 }
-

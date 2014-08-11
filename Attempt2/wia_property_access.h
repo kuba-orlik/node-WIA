@@ -2,6 +2,8 @@
 #ifndef prop_accs
 #define prop_accs
 
+#define MAX_GUID_STRING_LEN 39
+
 HRESULT ReadPropertyLong(IWiaPropertyStorage *pWiaPropertyStorage, const PROPSPEC *pPropSpec, LONG *plResult){
     PROPVARIANT PropVariant;
     HRESULT hr = pWiaPropertyStorage->ReadMultiple(1, pPropSpec, &PropVariant);
@@ -57,4 +59,46 @@ HRESULT ReadPropertyLong(IWiaPropertyStorage *pWiaPropertyStorage, const PROPSPE
     return hr;
 }
 
+HRESULT ReadPropertyGuid(IWiaPropertyStorage *pWiaPropertyStorage, const PROPSPEC *pPropSpec, GUID *pguidResult){
+    PROPVARIANT PropVariant;
+
+    HRESULT hr = pWiaPropertyStorage->ReadMultiple(
+        1, 
+        pPropSpec, 
+        &PropVariant
+    );
+    if (SUCCEEDED(hr)){
+        switch (PropVariant.vt){
+            case VT_CLSID:{
+                *pguidResult = *PropVariant.puuid; 
+                hr = S_OK;
+                break;
+            }case VT_BSTR:{
+                hr = CLSIDFromString(PropVariant.bstrVal, pguidResult);
+                break;
+            }case VT_LPWSTR:{
+                hr = CLSIDFromString(PropVariant.pwszVal, pguidResult);
+                break;
+            }case VT_LPSTR:{
+                WCHAR wszGuid[MAX_GUID_STRING_LEN];
+				mbstowcs_s(NULL, wszGuid, MAX_GUID_STRING_LEN, PropVariant.pszVal, MAX_GUID_STRING_LEN);
+
+                wszGuid[MAX_GUID_STRING_LEN - 1] = L'\0';
+
+                hr = CLSIDFromString(wszGuid, pguidResult);
+
+                break;
+            }default:{
+                hr = E_FAIL;
+                break;
+            }
+        }
+    }
+
+    PropVariantClear(&PropVariant);
+
+    return hr;
+}
+
 #endif
+

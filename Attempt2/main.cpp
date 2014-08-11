@@ -20,6 +20,7 @@ int main(){
 	}
 	printf("choice: %ws.\n", res.device_id);
 	struct scan_settings_result set_res =  display_scan_settings_dialog(res);
+	scan(set_res);
 	printf("amount of items: %i\n", set_res.item_count);
 	printf("after dialog");
 	getchar();
