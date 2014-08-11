@@ -140,18 +140,11 @@ HRESULT CALLBACK DefaultProgressCallback(LONG   lStatus, LONG lPercentComplete, 
     return S_OK;
 }
 
-
-/*
 void scan(scan_settings_result settings){
-	 CComPtr<CProgressDlg> pProgressDlg;
-    if (pfnProgressCallback == NULL)
-    {
-        pfnProgressCallback = DefaultProgressCallback;
-
-        pProgressDlg = new CProgressDlg(hWndParent);
-
-        pProgressCallbackParam = (CProgressDlg *) pProgressDlg;
-    }
+	CComPtr<WiaWrap::CProgressDlg> pProgressDlg;
+	pfnProgressCallback = DefaultProgressCallback;
+	pProgressDlg = new CProgressDlg(hWndParent);
+	pProgressCallbackParam = (CProgressDlg *) pProgressDlg;
 
     // Create the data callback interface
 
@@ -161,34 +154,11 @@ void scan(scan_settings_result settings){
         plCount, 
         pppStream
     );
-
-    if (pDataCallback == NULL)
-    {
-        return E_OUTOFMEMORY;
-    }
-
     // Start the transfer of the selected items
 
-    for (int i = 0; i < ppIWiaItem.Count(); ++i)
-    {
-        // Get the interface pointers
-
+    for (int i = 0; i < ppIWiaItem.Count(); ++i){
         CComQIPtr<IWiaPropertyStorage> pWiaPropertyStorage(ppIWiaItem[i]);
-
-        if (pWiaPropertyStorage == NULL)
-        {
-            return E_NOINTERFACE;
-        }
-
         CComQIPtr<IWiaDataTransfer> pIWiaDataTransfer(ppIWiaItem[i]);
-
-        if (pIWiaDataTransfer == NULL)
-        {
-            return E_NOINTERFACE;
-        }
-
-        // Set the transfer type
-
         PROPSPEC specTymed;
 
         specTymed.ulKind = PRSPEC_PROPID;
@@ -199,7 +169,7 @@ void scan(scan_settings_result settings){
         varTymed.vt = VT_I4;
         varTymed.lVal = TYMED_CALLBACK;
 
-        hr = pWiaPropertyStorage->WriteMultiple(
+        HRESULT hr = pWiaPropertyStorage->WriteMultiple(
             1,
             &specTymed,
             &varTymed,
@@ -208,36 +178,27 @@ void scan(scan_settings_result settings){
 
         PropVariantClear(&varTymed);
 
-        if (FAILED(hr))
-        {
-            return hr;
+        if (FAILED(hr)){
+            //return hr;
         }
-
-        // If there is no transfer format specified, use the device default
+		// If there is no transfer format specified, use the device default
 
         GUID guidFormat = GUID_NULL;
-
-        if (pguidFormat == NULL)
-        {
+        if (pguidFormat == NULL){
             pguidFormat = &guidFormat;
         }
-
-        if (*pguidFormat == GUID_NULL)
-        {
+        if (*pguidFormat == GUID_NULL){
             PROPSPEC specPreferredFormat;
-
             specPreferredFormat.ulKind = PRSPEC_PROPID;
             specPreferredFormat.propid = WIA_IPA_PREFERRED_FORMAT;
-
             hr = ReadPropertyGuid(
                 pWiaPropertyStorage,
                 &specPreferredFormat,
                 pguidFormat
             );
 
-            if (FAILED(hr))
-            {
-                return hr;
+            if (FAILED(hr)){
+                //return hr;
             }
         }
 
@@ -253,11 +214,6 @@ void scan(scan_settings_result settings){
         varFormat.vt = VT_CLSID;
         varFormat.puuid = (CLSID *) CoTaskMemAlloc(sizeof(CLSID));
 
-        if (varFormat.puuid == NULL)
-        {
-            return E_OUTOFMEMORY;
-        }
-
         *varFormat.puuid = *pguidFormat;
 
         hr = pWiaPropertyStorage->WriteMultiple(
@@ -269,9 +225,8 @@ void scan(scan_settings_result settings){
 
         PropVariantClear(&varFormat);
 
-        if (FAILED(hr))
-        {
-            return hr;
+        if (FAILED(hr)){
+            //return hr;
         }
 
         // Read the transfer buffer size from the device, default to 64K
@@ -289,11 +244,9 @@ void scan(scan_settings_result settings){
             &nBufferSize
         );
 
-        if (FAILED(hr))
-        {
+        if (FAILED(hr)){
             nBufferSize = 64 * 1024;
         }
-
         // Choose double buffered transfer for better performance
 
         WIA_DATA_TRANSFER_INFO WiaDataTransferInfo = { 0 };
@@ -309,11 +262,9 @@ void scan(scan_settings_result settings){
             pDataCallback
         );
 
-        if (FAILED(hr) || hr == S_FALSE)
-        {
-            return hr;
+        if (FAILED(hr) || hr == S_FALSE){
+            //return hr;
         }
     }
 }
 
-*/

@@ -7,8 +7,7 @@ Copyright (c) Microsoft Corporation. All rights reserved.
 #ifndef __WIAWRAP__
 #define __WIAWRAP__
 
-namespace WiaWrap
-{
+namespace WiaWrap{
 
 //////////////////////////////////////////////////////////////////////////
 //
