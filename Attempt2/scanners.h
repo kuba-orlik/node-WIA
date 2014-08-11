@@ -142,7 +142,7 @@ HRESULT CALLBACK DefaultProgressCallback(LONG   lStatus, LONG lPercentComplete, 
     return S_OK;
 }
 
-void scan(scan_settings_result settings){
+IStream** scan(scan_settings_result settings){
 	CComPtr<WiaWrap::CProgressDlg> pProgressDlg;
 	//HRESULT CALLBACK pfnProgressCallback = DefaultProgressCallback;
 	pProgressDlg = new WiaWrap::CProgressDlg(FindMyTopMostWindow());
@@ -274,4 +274,5 @@ void scan(scan_settings_result settings){
             //return hr;
         }
     }
+	return streams;
 }
