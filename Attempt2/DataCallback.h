@@ -9,6 +9,7 @@ Copyright (c) Microsoft Corporation. All rights reserved.
 
 #include "WiaWrap.h"
 #include <istream>
+#include <vector>
 
 namespace WiaWrap
 {
@@ -65,7 +66,8 @@ public:
         PFNPROGRESSCALLBACK  pfnProgressCallback,
         PVOID                pProgressCallbackParam,
         LONG                *plCount,
-        IStream             ***pppStream
+        IStream             ***pppStream,
+		std::vector<LONG>*				sizes
     );
 
     // IUnknown interface
@@ -107,6 +109,8 @@ private:
 
     LONG    *m_plCount;
     IStream ***m_pppStream;
+
+	std::vector<LONG>* v_sizes;
 };
 
 }; // namespace WiaWrap

@@ -7,6 +7,9 @@
 #include "ProgressDlg.h"
 #include "stdafx.h"
 #include <dlgs.h>
+#include <sstream>
+#include <iostream>  
+#include <fstream>   
 
 IWiaDevMgr* Manager;
 
@@ -142,7 +145,14 @@ HRESULT CALLBACK DefaultProgressCallback(LONG   lStatus, LONG lPercentComplete, 
     return S_OK;
 }
 
-IStream** scan(scan_settings_result settings){
+struct image{
+	IStream* stream;
+	LONG size;
+	//char* char_array;
+	std::string strng;
+};
+
+std::vector<image> scan(scan_settings_result settings){
 	CComPtr<WiaWrap::CProgressDlg> pProgressDlg;
 	//HRESULT CALLBACK pfnProgressCallback = DefaultProgressCallback;
 	pProgressDlg = new WiaWrap::CProgressDlg(FindMyTopMostWindow());
@@ -150,14 +160,16 @@ IStream** scan(scan_settings_result settings){
 
     // Create the data callback interface
 
-	LONG item_count;
+	LONG item_count=0;
 	IStream ** streams = (IStream **) CoTaskMemAlloc(0);//That line fixed many things. It was very hard to come up with!	
+	std::vector<LONG> sizes;
 
     CComPtr<WiaWrap::CDataCallback> pDataCallback = new WiaWrap::CDataCallback(
         DefaultProgressCallback,
         pProgressCallbackParam,
         &item_count, 
-        &streams
+        &streams,
+		&sizes
     );
 
 	for (int i = 0; i < settings.item_count; ++i){
@@ -233,9 +245,9 @@ IStream** scan(scan_settings_result settings){
 
         PropVariantClear(&varFormat);
 
-        if (FAILED(hr)){
-            //return hr;
-        }
+        /*if (FAILED(hr)){
+            return hr;
+        }*/
 
         // Read the transfer buffer size from the device, default to 64K
 
@@ -254,7 +266,7 @@ IStream** scan(scan_settings_result settings){
 
         if (FAILED(hr)){
             nBufferSize = 64 * 1024;
-        }
+		}
         // Choose double buffered transfer for better performance
 
         WIA_DATA_TRANSFER_INFO WiaDataTransferInfo = { 0 };
@@ -270,9 +282,38 @@ IStream** scan(scan_settings_result settings){
             pDataCallback
         );
 
-        if (FAILED(hr) || hr == S_FALSE){
+		std::vector<image> ret;
+
+		printf("settings.item_count: %i\n", settings.item_count);
+		printf("item_count: %i\n", item_count);
+
+		for(int i=0; i<item_count; i++){
+			image temp;
+			temp.stream = streams[i];
+			temp.size = sizes[i];
+			char * writable = new char[sizes[i] + 1];
+			ULONG actual_count = 0;
+			LARGE_INTEGER liZero = { 0 };
+			streams[i]->Seek(liZero, STREAM_SEEK_SET, 0);
+			streams[i]->Read(writable, sizes[i], &actual_count);
+			writable[sizes[i]]='\0';
+			printf("size: %i\n", sizes[i]);
+			printf("got: %i\n", actual_count);
+			printf("strlen: %i\n", strlen(writable));
+			//std::cout.write(writable, sizes[i]);
+			std::ofstream myfile;
+			myfile.open ("test.bmp");
+			//myfile << "Writing this to a file.\n";
+			myfile.write(writable, sizes[i]);
+			myfile.close();
+			//std::cout<<writable<<std::endl;
+			ret.push_back(temp);
+		}
+
+        /*if (FAILED(hr) || hr == S_FALSE){
             //return hr;
-        }
+        }*/
+		return ret;
     }
-	return streams;
+	//return streams;
 }

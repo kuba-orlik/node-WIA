@@ -562,11 +562,14 @@ WiaGetImage(
 
     // Create the data callback interface
 
+	std::vector<LONG> lolo;
+
     CComPtr<CDataCallback> pDataCallback = new CDataCallback(
         pfnProgressCallback,
         pProgressCallbackParam,
         plCount, 
-        pppStream
+        pppStream,
+		&lolo
     );
 
     if (pDataCallback == NULL)

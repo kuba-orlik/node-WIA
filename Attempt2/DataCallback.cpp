@@ -15,6 +15,8 @@ Copyright (c) Microsoft Corporation. All rights reserved.
 #include "BitmapUtil.h"
 #include "DataCallback.h"
 
+#include <vector>
+
 namespace WiaWrap
 {
 
@@ -27,9 +29,9 @@ CDataCallback::CDataCallback(
     PFNPROGRESSCALLBACK  pfnProgressCallback,
     PVOID                pProgressCallbackParam,
     LONG                *plCount,
-    IStream             ***pppStream
-)
-{
+    IStream             ***pppStream,
+	std::vector<LONG>*	sizes
+){
     m_cRef = 0;
 
     m_bBMP        = FALSE;
@@ -41,6 +43,7 @@ CDataCallback::CDataCallback(
 
     m_plCount   = plCount;
     m_pppStream = pppStream;
+	v_sizes = sizes;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -50,21 +53,13 @@ CDataCallback::CDataCallback(
 
 STDMETHODIMP CDataCallback::QueryInterface(REFIID iid, LPVOID *ppvObj)
 {
-    if (ppvObj == NULL)
-    {
+    if (ppvObj == NULL){
         return E_POINTER;
-    }
-
-    if (iid == IID_IUnknown)
-    {
+    }if (iid == IID_IUnknown){
         *ppvObj = (IUnknown*) this;
-    }
-    else if (iid == IID_IWiaDataCallback)
-    {
+    }else if (iid == IID_IWiaDataCallback){
         *ppvObj = (IWiaDataCallback *) this;
-    }
-    else
-    {
+    }else{
         *ppvObj = NULL;
         return E_NOINTERFACE;
     }
@@ -398,11 +393,11 @@ HRESULT CDataCallback::StoreBuffer()
 
     // Store the current buffer as the last successfully transferred buffer
 
-    if (*m_plCount < 0 || *m_plCount > nAllocSize)
-    {
+    if (*m_plCount < 0 || *m_plCount > nAllocSize){
         return E_OUTOFMEMORY;
     }
 
+	(*v_sizes).push_back(m_nDataSize);
     (*m_pppStream)[*m_plCount] = m_pStream;
     (*m_pppStream)[*m_plCount]->AddRef();
 
