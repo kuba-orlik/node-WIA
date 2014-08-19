@@ -11,6 +11,12 @@
 #include <iostream>  
 #include <fstream>   
 
+#ifdef WIAWRAP_DLL_EXPORT
+#define WIAWRAP_API __declspec(dllexport) 
+#else
+#define WIAWRAP_API __declspec(dllimport) 
+#endif
+
 IWiaDevMgr* Manager;
 
 void init_wia_manager(){
