@@ -1,13 +1,23 @@
-#include "scanners.h";
+#include "scanners.h"
 
 IWiaDevMgr* Manager;
+
+HINSTANCE g_hInstance = 0;
+
+struct image{
+	IStream* stream;
+	LONG size;
+	//char* char_array;
+	std::string strng;
+};
+
 
 void init_wia_manager(){
 	Manager = NULL;
 	CoCreateInstance( CLSID_WiaDevMgr, NULL, CLSCTX_LOCAL_SERVER, IID_IWiaDevMgr, (void**)&Manager ); 
 }
 
-struct device_select_result select_device(bool force_display_dialog=false){
+device_select_result select_device(bool force_display_dialog){
 	CoInitialize(nullptr);
 	init_wia_manager();
 	HWND current_handle= FindMyTopMostWindow();
@@ -66,7 +76,7 @@ void tell_scanner_to_scan_all_pages(IWiaItem* p_wia_item){
     PropVariantClear(&varPages);
 }
 
-struct scan_settings_result display_scan_settings_dialog(struct device_select_result sel_res, bool single_image = false){
+struct scan_settings_result display_scan_settings_dialog(struct device_select_result sel_res, bool single_image){
 	scan_settings_result ret;
 	ret.error = false;
 	if(!sel_res.found){
@@ -165,56 +175,48 @@ int GetEncoderClsid(const WCHAR* format, CLSID* pClsid){
    return -1;  // Failure
 }
 
-class custom_image{
-private:
-	IStream* m_stream;
-	IStream* png_stream;
-	ULONG_PTR gdi_pointer;
-public:
-	custom_image(IStream* p_stream):m_stream(p_stream){
-		Gdiplus::GdiplusStartupInput gdi_input;
-		gdi_input.GdiplusVersion= 1;
-		gdi_input.DebugEventCallback=NULL;
-		gdi_input.SuppressBackgroundThread=FALSE;
-		Gdiplus::Status init_status = Gdiplus::GdiplusStartup(&gdi_pointer, &gdi_input, NULL);
-		printf("GDI+ init status: %d\n", init_status);
-		/*Gdiplus::Image temp_image(p_stream);
-		CLSID pngClsid;
-		//GetEncoderClsid(L"image/png", &pngClsid);
-		GetEncoderClsid(L"image/jpeg", &pngClsid);
-		png_stream = SHCreateMemStream(NULL, 0);
-		temp_image.Save(png_stream, &pngClsid, NULL);*/
-	}
-	~custom_image(){
-		Gdiplus::GdiplusShutdown(gdi_pointer);	
-	}
+custom_image::custom_image(IStream* p_stream):m_stream(p_stream){
+	Gdiplus::GdiplusStartupInput gdi_input;
+	gdi_input.GdiplusVersion= 1;
+	gdi_input.DebugEventCallback=NULL;
+	gdi_input.SuppressBackgroundThread=FALSE;
+	Gdiplus::Status init_status = Gdiplus::GdiplusStartup(&gdi_pointer, &gdi_input, NULL);
+	printf("GDI+ init status: %d\n", init_status);
+	/*Gdiplus::Image temp_image(p_stream);
+	CLSID pngClsid;
+	//GetEncoderClsid(L"image/png", &pngClsid);
+	GetEncoderClsid(L"image/jpeg", &pngClsid);
+	png_stream = SHCreateMemStream(NULL, 0);
+	temp_image.Save(png_stream, &pngClsid, NULL);*/
+}
+custom_image::~custom_image(){
+	Gdiplus::GdiplusShutdown(gdi_pointer);	
+}
 
-	void save_to_file(const char* file){
-		Gdiplus::Image image(m_stream);
-		CLSID pngClsid;
-		GetEncoderClsid(L"image/png", &pngClsid);
-		Gdiplus::Status stat = image.Save(L"new_encoder.png", &pngClsid, NULL);
-		if(stat == Gdiplus::Ok)
-			printf("Bird.png was saved successfully\n");
-		else
-			printf("Failure: stat = %d\n", stat); 
-		/*ULARGE_INTEGER png_stream_size;
-		IStream_Size(png_stream, &png_stream_size);
-		char * writable = new char[png_stream_size.QuadPart + 1];
-		ULONG actual_count = 0;
-		LARGE_INTEGER liZero = { 0 };
-		png_stream->Seek(liZero, STREAM_SEEK_SET, 0);
-		png_stream->Read(writable, png_stream_size.QuadPart, &actual_count);
-		writable[png_stream_size.QuadPart]='\0';
-		std::ofstream myfile;
-		myfile.open (file);
-		//myfile << "Writing this to a file.\n";
-		myfile.write(writable, png_stream_size.QuadPart);
-		myfile.close();*/
+void custom_image::save_to_file(const char* file){
+	Gdiplus::Image image(m_stream);
+	CLSID pngClsid;
+	GetEncoderClsid(L"image/png", &pngClsid);
+	Gdiplus::Status stat = image.Save(L"new_encoder.png", &pngClsid, NULL);
+	if(stat == Gdiplus::Ok)
+		printf("Bird.png was saved successfully\n");
+	else
+		printf("Failure: stat = %d\n", stat); 
+	/*ULARGE_INTEGER png_stream_size;
+	IStream_Size(png_stream, &png_stream_size);
+	char * writable = new char[png_stream_size.QuadPart + 1];
+	ULONG actual_count = 0;
+	LARGE_INTEGER liZero = { 0 };
+	png_stream->Seek(liZero, STREAM_SEEK_SET, 0);
+	png_stream->Read(writable, png_stream_size.QuadPart, &actual_count);
+	writable[png_stream_size.QuadPart]='\0';
+	std::ofstream myfile;
+	myfile.open (file);
+	//myfile << "Writing this to a file.\n";
+	myfile.write(writable, png_stream_size.QuadPart);
+	myfile.close();*/
+}
 
-	}
-
-};
 
 std::vector<image> scan(scan_settings_result settings){
 	CComPtr<WiaWrap::CProgressDlg> pProgressDlg;

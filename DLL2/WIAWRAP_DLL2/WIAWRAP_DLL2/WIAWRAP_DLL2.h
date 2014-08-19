@@ -7,7 +7,6 @@
 */
 
 #include <string>
-#include "scanners.h"
 
 extern "C"{
 	__declspec(dllexport) int lol();

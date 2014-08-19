@@ -7,6 +7,8 @@ Copyright (c) Microsoft Corporation. All rights reserved.
 #ifndef __BITMAPWND__
 #define __BITMAPWND__
 
+#pragma comment(lib,"gdiplus.lib")
+
 //////////////////////////////////////////////////////////////////////////
 //
 // CBitmapWnd
