@@ -1,16 +1,38 @@
-// stdafx.h : include file for standard system include files,
-// or project specific include files that are used frequently, but
-// are changed infrequently
-//
+/*++
 
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+--*/
+
+#ifndef __STDAFX__
+#define __STDAFX__
+
+#if _MSC_VER > 1000
 #pragma once
+#endif // _MSC_VER > 1000
 
-#include "targetver.h"
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN		
+#endif //WIN32_LEAN_AND_MEAN
 
-#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
-// Windows Header Files:
+#include <tchar.h>
+#include <stdio.h>
 #include <windows.h>
+#include <commctrl.h>
+#include <shellapi.h>
+#include <objbase.h>
+#include <atlbase.h>
+#include <wia.h>
+#include <sti.h>
+#include "gdiplus.h"
 
+#define COUNTOF(x) ( sizeof(x) / sizeof(*x) )
 
+#define DEFAULT_STRING_SIZE 256
 
-// TODO: reference additional headers your program requires here
+extern HINSTANCE g_hInstance;
+
+//{{AFX_INSERT_LOCATION}}
+
+#endif //__STDAFX__
+

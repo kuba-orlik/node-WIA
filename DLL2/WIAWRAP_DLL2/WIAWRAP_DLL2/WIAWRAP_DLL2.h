@@ -7,21 +7,8 @@
 */
 
 #include <string>
+#include "scanners.h"
 
-/*namespace WIAWRAP
-{
-    // This class is exported from the MathFuncsDll.dll
-    class WIAWRAP{
-    public: 
-        // Returns a + b
-		static  MATHFUNCSDLL_API int scan(); 
-
-      
-		
-    };
-}
-
-*/
 extern "C"{
 	__declspec(dllexport) int lol();
 }
