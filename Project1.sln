@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Project1", "Project1\Projec
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Attempt2", "Attempt2\Attempt2.vcxproj", "{DC6E2F06-E4C9-421E-BAED-B5F6F0E388D4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WIAWRAP_DLL", "WIAWRAP_DLL\WIAWRAP_DLL.vcxproj", "{32677142-9DE2-401C-99BC-46578CFBEC0E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,6 +21,10 @@ Global
 		{DC6E2F06-E4C9-421E-BAED-B5F6F0E388D4}.Debug|Win32.Build.0 = Debug|Win32
 		{DC6E2F06-E4C9-421E-BAED-B5F6F0E388D4}.Release|Win32.ActiveCfg = Release|Win32
 		{DC6E2F06-E4C9-421E-BAED-B5F6F0E388D4}.Release|Win32.Build.0 = Release|Win32
+		{32677142-9DE2-401C-99BC-46578CFBEC0E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{32677142-9DE2-401C-99BC-46578CFBEC0E}.Debug|Win32.Build.0 = Debug|Win32
+		{32677142-9DE2-401C-99BC-46578CFBEC0E}.Release|Win32.ActiveCfg = Release|Win32
+		{32677142-9DE2-401C-99BC-46578CFBEC0E}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
