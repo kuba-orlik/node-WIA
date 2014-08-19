@@ -1,29 +1,4 @@
-#include "stdio.h"
-#include <iostream>
-#include <vector>
-#include "windows.h"
-#include "winerror.h"
-#include "Wia.h"
-#include <WiaDef.h>
-#include "comdef.h"
-#include "WiaWrap.h"
-#include <Wia.h>
-#include "window.h"
-#include "wia_property_access.h"
-#pragma comment(lib, "wiaguid")
-#include "structures.h"
-#include "DataCallback.h"
-#include "ProgressDlg.h"
-#include <dlgs.h>
-#include <sstream>
-#include <iostream>  
-#include <fstream>   
-
-#ifdef WIAWRAP_DLL_EXPORT
-#define WIAWRAP_API __declspec(dllexport) 
-#else
-#define WIAWRAP_API __declspec(dllimport) 
-#endif
+#include "scanners.h";
 
 IWiaDevMgr* Manager;
 
@@ -68,6 +43,7 @@ bool item_has_feeder(IWiaItem* p_wia_item){
 		return false;
 	}
 };
+
 
 void tell_scanner_to_scan_all_pages(IWiaItem* p_wia_item){
 	PROPSPEC specPages;
@@ -117,6 +93,7 @@ struct scan_settings_result display_scan_settings_dialog(struct device_select_re
 	return ret;	
 }
 
+
 HRESULT CALLBACK DefaultProgressCallback(LONG   lStatus, LONG lPercentComplete, PVOID  pParam){
     WiaWrap::CProgressDlg *pProgressDlg = (WiaWrap::CProgressDlg *) pParam;
     if (pProgressDlg == NULL){
@@ -159,15 +136,7 @@ HRESULT CALLBACK DefaultProgressCallback(LONG   lStatus, LONG lPercentComplete, 
     return S_OK;
 }
 
-struct image{
-	IStream* stream;
-	LONG size;
-	//char* char_array;
-	std::string strng;
-};
-
-int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
-{
+int GetEncoderClsid(const WCHAR* format, CLSID* pClsid){
    UINT  num = 0;          // number of image encoders
    UINT  size = 0;         // size of the image encoder array in bytes
 

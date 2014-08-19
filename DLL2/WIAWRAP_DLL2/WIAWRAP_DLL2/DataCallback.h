@@ -6,7 +6,7 @@ Copyright (c) Microsoft Corporation. All rights reserved.
 
 #ifndef __DATACALLBACK__
 #define __DATACALLBACK__
-
+#pragma comment(lib, "wiaguid")
 #include "WiaWrap.h"
 #include <istream>
 #include <vector>
