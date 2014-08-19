@@ -152,6 +152,87 @@ struct image{
 	std::string strng;
 };
 
+int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
+{
+   UINT  num = 0;          // number of image encoders
+   UINT  size = 0;         // size of the image encoder array in bytes
+
+   Gdiplus::ImageCodecInfo* pImageCodecInfo = NULL;
+   Gdiplus::GetImageEncodersSize(&num, &size);
+   if(size == 0)
+      return -1;  // Failure
+
+   pImageCodecInfo = (Gdiplus::ImageCodecInfo*)(malloc(size));
+   if(pImageCodecInfo == NULL)
+      return -1;  // Failure
+
+   Gdiplus::GetImageEncoders(num, size, pImageCodecInfo);
+
+   for(UINT j = 0; j < num; ++j)
+   {
+      if( wcscmp(pImageCodecInfo[j].MimeType, format) == 0 )
+      {
+         *pClsid = pImageCodecInfo[j].Clsid;
+         free(pImageCodecInfo);
+         return j;  // Success
+      }    
+   }
+
+   free(pImageCodecInfo);
+   return -1;  // Failure
+}
+
+class custom_image{
+private:
+	IStream* m_stream;
+	IStream* png_stream;
+	ULONG_PTR gdi_pointer;
+public:
+	custom_image(IStream* p_stream):m_stream(p_stream){
+		Gdiplus::GdiplusStartupInput gdi_input;
+		gdi_input.GdiplusVersion= 1;
+		gdi_input.DebugEventCallback=NULL;
+		gdi_input.SuppressBackgroundThread=FALSE;
+		Gdiplus::Status init_status = Gdiplus::GdiplusStartup(&gdi_pointer, &gdi_input, NULL);
+		printf("GDI+ init status: %d\n", init_status);
+		/*Gdiplus::Image temp_image(p_stream);
+		CLSID pngClsid;
+		//GetEncoderClsid(L"image/png", &pngClsid);
+		GetEncoderClsid(L"image/jpeg", &pngClsid);
+		png_stream = SHCreateMemStream(NULL, 0);
+		temp_image.Save(png_stream, &pngClsid, NULL);*/
+	}
+	~custom_image(){
+		Gdiplus::GdiplusShutdown(gdi_pointer);	
+	}
+
+	void save_to_file(const char* file){
+		Gdiplus::Image image(m_stream);
+		CLSID pngClsid;
+		GetEncoderClsid(L"image/png", &pngClsid);
+		Gdiplus::Status stat = image.Save(L"new_encoder.png", &pngClsid, NULL);
+		if(stat == Gdiplus::Ok)
+			printf("Bird.png was saved successfully\n");
+		else
+			printf("Failure: stat = %d\n", stat); 
+		/*ULARGE_INTEGER png_stream_size;
+		IStream_Size(png_stream, &png_stream_size);
+		char * writable = new char[png_stream_size.QuadPart + 1];
+		ULONG actual_count = 0;
+		LARGE_INTEGER liZero = { 0 };
+		png_stream->Seek(liZero, STREAM_SEEK_SET, 0);
+		png_stream->Read(writable, png_stream_size.QuadPart, &actual_count);
+		writable[png_stream_size.QuadPart]='\0';
+		std::ofstream myfile;
+		myfile.open (file);
+		//myfile << "Writing this to a file.\n";
+		myfile.write(writable, png_stream_size.QuadPart);
+		myfile.close();*/
+
+	}
+
+};
+
 std::vector<image> scan(scan_settings_result settings){
 	CComPtr<WiaWrap::CProgressDlg> pProgressDlg;
 	//HRESULT CALLBACK pfnProgressCallback = DefaultProgressCallback;
@@ -288,7 +369,7 @@ std::vector<image> scan(scan_settings_result settings){
 		printf("item_count: %i\n", item_count);
 
 		for(int i=0; i<item_count; i++){
-			image temp;
+			/*image temp;
 			temp.stream = streams[i];
 			temp.size = sizes[i];
 			char * writable = new char[sizes[i] + 1];
@@ -307,7 +388,9 @@ std::vector<image> scan(scan_settings_result settings){
 			myfile.write(writable, sizes[i]);
 			myfile.close();
 			//std::cout<<writable<<std::endl;
-			ret.push_back(temp);
+			ret.push_back(temp);*/
+			custom_image temp_image(streams[i]);
+			temp_image.save_to_file("temp223.jpg");
 		}
 
         /*if (FAILED(hr) || hr == S_FALSE){
