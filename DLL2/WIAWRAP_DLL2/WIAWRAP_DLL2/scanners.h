@@ -22,11 +22,12 @@ extern IWiaDevMgr* Manager;
 
 void init_wia_manager();
 
-struct image{
-	IStream* stream;
+struct saved_image{
+	/*IStream* stream;
 	LONG size;
 	//char* char_array;
-	std::string strng;
+	std::string strng;*/
+	CString filename;
 };
 
 
@@ -53,8 +54,8 @@ public:
 	custom_image(IStream* p_stream);
 	~custom_image();
 
-	void save_to_file(const char* file);
+	void save_to_file(CString file);
 
 };
 
-std::vector<image> scan(scan_settings_result settings);
+std::vector<saved_image> scan(scan_settings_result settings);

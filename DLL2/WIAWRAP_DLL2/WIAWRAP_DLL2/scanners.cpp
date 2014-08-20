@@ -101,6 +101,7 @@ device_select_result select_device(bool force_display_dialog){
 }
 
 bool item_has_feeder(IWiaItem* p_wia_item){
+	printf("all_pages\n");
 	PROPSPEC specDocumentHandlingSelect;
 
     specDocumentHandlingSelect.ulKind = PRSPEC_PROPID;
@@ -169,6 +170,7 @@ struct scan_settings_result display_scan_settings_dialog(struct device_select_re
 		&item_count,
         &ppIWiaItem
     );
+	tell_scanner_to_scan_all_pages(sel_res.p_wia_item);
 	ret.item_count = item_count;
 	ret.wia_item_array = ppIWiaItem;
 	ret.wia_root_item = sel_res.p_wia_item;
@@ -233,10 +235,8 @@ int GetEncoderClsid(const WCHAR* format, CLSID* pClsid){
 
    Gdiplus::GetImageEncoders(num, size, pImageCodecInfo);
 
-   for(UINT j = 0; j < num; ++j)
-   {
-      if( wcscmp(pImageCodecInfo[j].MimeType, format) == 0 )
-      {
+   for(UINT j = 0; j < num; ++j){
+      if( wcscmp(pImageCodecInfo[j].MimeType, format) == 0 ){
          *pClsid = pImageCodecInfo[j].Clsid;
          free(pImageCodecInfo);
          return j;  // Success
@@ -254,48 +254,29 @@ custom_image::custom_image(IStream* p_stream):m_stream(p_stream){
 	gdi_input.SuppressBackgroundThread=FALSE;
 	Gdiplus::Status init_status = Gdiplus::GdiplusStartup(&gdi_pointer, &gdi_input, NULL);
 	printf("GDI+ init status: %d\n", init_status);
-	/*Gdiplus::Image temp_image(p_stream);
-	CLSID pngClsid;
-	//GetEncoderClsid(L"image/png", &pngClsid);
-	GetEncoderClsid(L"image/jpeg", &pngClsid);
-	png_stream = SHCreateMemStream(NULL, 0);
-	temp_image.Save(png_stream, &pngClsid, NULL);*/
 }
 custom_image::~custom_image(){
 	Gdiplus::GdiplusShutdown(gdi_pointer);	
 }
 
-void custom_image::save_to_file(const char* file){
+void custom_image::save_to_file(CString file){
 	Gdiplus::Image image(m_stream);
 	CLSID pngClsid;
 	GetEncoderClsid(L"image/png", &pngClsid);
-	Gdiplus::Status stat = image.Save(L"new_encoder.png", &pngClsid, NULL);
+	Gdiplus::Status stat = image.Save(file, &pngClsid, NULL);
 	if(stat == Gdiplus::Ok)
 		printf("Bird.png was saved successfully\n");
 	else
 		printf("Failure: stat = %d\n", stat); 
-	/*ULARGE_INTEGER png_stream_size;
-	IStream_Size(png_stream, &png_stream_size);
-	char * writable = new char[png_stream_size.QuadPart + 1];
-	ULONG actual_count = 0;
-	LARGE_INTEGER liZero = { 0 };
-	png_stream->Seek(liZero, STREAM_SEEK_SET, 0);
-	png_stream->Read(writable, png_stream_size.QuadPart, &actual_count);
-	writable[png_stream_size.QuadPart]='\0';
-	std::ofstream myfile;
-	myfile.open (file);
-	//myfile << "Writing this to a file.\n";
-	myfile.write(writable, png_stream_size.QuadPart);
-	myfile.close();*/
 }
 
 
-std::vector<image> scan(scan_settings_result settings){
+std::vector<saved_image> scan(scan_settings_result settings){
 	printf("called scan\n");
 	CComPtr<WiaWrap::CProgressDlg> pProgressDlg;
 	//HRESULT CALLBACK pfnProgressCallback = DefaultProgressCallback;
 	HWND window = FindMyTopMostWindow();
-	pProgressDlg = new WiaWrap::CProgressDlg(NULL);
+	pProgressDlg = new WiaWrap::CProgressDlg(window);
 	//pProgressDlg = new WiaWrap::CProgressDlg(NULL);
 	PVOID pProgressCallbackParam = (WiaWrap::CProgressDlg *) pProgressDlg;
 
@@ -423,39 +404,17 @@ std::vector<image> scan(scan_settings_result settings){
             pDataCallback
         );
 
-		std::vector<image> ret;
-
-		printf("settings.item_count: %i\n", settings.item_count);
-		printf("item_count: %i\n", item_count);
+		std::vector<saved_image> ret;
 
 		for(int i=0; i<item_count; i++){
-			/*image temp;
-			temp.stream = streams[i];
-			temp.size = sizes[i];
-			char * writable = new char[sizes[i] + 1];
-			ULONG actual_count = 0;
-			LARGE_INTEGER liZero = { 0 };
-			streams[i]->Seek(liZero, STREAM_SEEK_SET, 0);
-			streams[i]->Read(writable, sizes[i], &actual_count);
-			writable[sizes[i]]='\0';
-			printf("size: %i\n", sizes[i]);
-			printf("got: %i\n", actual_count);
-			printf("strlen: %i\n", strlen(writable));
-			//std::cout.write(writable, sizes[i]);
-			std::ofstream myfile;
-			myfile.open ("test.bmp");
-			//myfile << "Writing this to a file.\n";
-			myfile.write(writable, sizes[i]);
-			myfile.close();
-			//std::cout<<writable<<std::endl;
-			ret.push_back(temp);*/
 			custom_image temp_image(streams[i]);
-			temp_image.save_to_file("temp223.jpg");
+			CString filename;
+			filename.Format(L"scan_temp%i.png", i);
+			temp_image.save_to_file(filename);
+			saved_image temp_svd;
+			temp_svd.filename=filename;
+			ret.push_back(temp_svd);
 		}
-
-        /*if (FAILED(hr) || hr == S_FALSE){
-            //return hr;
-        }*/
 		return ret;
     }
 	//return streams;
