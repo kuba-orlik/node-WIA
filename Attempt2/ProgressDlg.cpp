@@ -6,11 +6,45 @@ Copyright (c) Microsoft Corporation. All rights reserved.
 
 #include "stdafx.h"
 #include "resource.h"
+#include <string>
 
 #include "ProgressDlg.h"
 
+
+
 namespace WiaWrap
 {
+
+	std::string PrintLastErrorStdStr()
+{
+  DWORD error = GetLastError();
+  if (error)
+  {
+    LPVOID lpMsgBuf;
+    DWORD bufLen = FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        error,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPTSTR) &lpMsgBuf,
+        0, NULL );
+    if (bufLen)
+    {
+      LPCSTR lpMsgStr = (LPCSTR)lpMsgBuf;
+      std::string result(lpMsgStr, lpMsgStr+bufLen);
+      
+      LocalFree(lpMsgBuf);
+
+	  printf("%s\n", result.c_str());
+
+      return result;
+    }
+  }
+  return std::string();
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -187,7 +221,7 @@ DWORD WINAPI CProgressDlg::ThreadProc(PVOID pParameter)
         DialogProc,
         (LPARAM) that
     );
-    
+    PrintLastErrorStdStr();
     return (DWORD) nResult;
 }                  
     

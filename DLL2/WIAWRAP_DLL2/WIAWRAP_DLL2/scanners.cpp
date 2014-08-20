@@ -1,21 +1,75 @@
 #include "scanners.h"
 
+#include <comdef.h>
+
 IWiaDevMgr* Manager;
 
 HINSTANCE g_hInstance = 0;
-
-struct image{
-	IStream* stream;
-	LONG size;
-	//char* char_array;
-	std::string strng;
-};
-
 
 void init_wia_manager(){
 	Manager = NULL;
 	CoCreateInstance( CLSID_WiaDevMgr, NULL, CLSCTX_LOCAL_SERVER, IID_IWiaDevMgr, (void**)&Manager ); 
 }
+
+class Formats{
+public:
+	static PROPSPEC getProp(int id){
+		PROPSPEC p;
+		p.ulKind = 1;
+		p.propid = id;
+		return p;
+	}
+
+	static PROPVARIANT getVariant(VARTYPE type){
+		PROPVARIANT v;
+		v.vt = type;
+		return v;
+	}
+
+};
+
+
+std::string bstr_to_str(BSTR source){
+	//source = L"lol2inside";
+	_bstr_t wrapped_bstr = _bstr_t(source);
+	int length = wrapped_bstr.length();
+	char* char_array = new char[length];
+	strcpy_s(char_array, length+1, wrapped_bstr);
+	return char_array;
+}
+
+const char* getDeviceName(IWiaItem* p_wia_item){
+	IEnumWIA_DEV_INFO *pWiaEnumDevInfo = NULL;
+	Manager->EnumDeviceInfo( WIA_DEVINFO_ENUM_LOCAL, &pWiaEnumDevInfo );
+	IWiaPropertyStorage* property_storage;
+	pWiaEnumDevInfo->Next( 1, &property_storage, NULL );	
+	PROPSPEC propspec_array[3];
+	PROPVARIANT propvar_array[3];
+	propspec_array[0]=Formats::getProp(WIA_DIP_DEV_ID);
+	propvar_array[0] =Formats::getVariant(VT_BSTR);
+	propspec_array[1]=Formats::getProp(WIA_DIP_VEND_DESC);
+	propvar_array[1] =Formats::getVariant(VT_BSTR);
+	propspec_array[2]=Formats::getProp(WIA_DIP_DEV_DESC);
+	propvar_array[2] =Formats::getVariant(VT_BSTR);
+	property_storage->ReadMultiple(3, propspec_array, propvar_array);
+	BSTR id = propvar_array[0].bstrVal;
+	BSTR vendor = propvar_array[1].bstrVal;
+	BSTR model = propvar_array[2].bstrVal;
+	std::string s_vendor,s_model;
+	s_vendor = bstr_to_str(vendor);
+	s_model = bstr_to_str(model);
+	std::string ret = s_model + " (" + s_vendor + ")";
+	printf("long name inside: %s\n", ret.c_str());
+	//printf("model_long: %s", ret.GetBuffer());
+	//return ret.GetBuffer();
+	//return "testowy string";
+	char* ret_cp = new char[ret.length()];
+	strcpy_s(ret_cp, ret.length()+1, ret.c_str());
+	return ret_cp;
+	//return "abc";
+}
+
+
 
 device_select_result select_device(bool force_display_dialog){
 	CoInitialize(nullptr);
@@ -30,7 +84,19 @@ device_select_result select_device(bool force_display_dialog){
 	}
 	Manager->SelectDeviceDlg(current_handle, StiDeviceTypeScanner, flags, &device_id,  &item);
 	bool found = (device_id!=NULL);
-	device_select_result ret={found, device_id, item};
+	if(!found){
+		device_select_result ret_fail = {false};
+		return ret_fail;
+	}
+	const char* device_name = getDeviceName(item);
+	printf("outside_device_name: %s\n", device_name);
+	int device_id_length = _bstr_t(device_id).length();
+	char* ch_device_id = new char[device_id_length];
+	strcpy_s(ch_device_id, device_id_length+1, _bstr_t(device_id));
+	printf("bstr=%ws\n", device_id);
+	//BstrToStdString(device_id, s_device_id);
+	printf("%s\n", device_name);
+	device_select_result ret={found, ch_device_id, item, device_name};
 	return ret;
 }
 
@@ -76,7 +142,8 @@ void tell_scanner_to_scan_all_pages(IWiaItem* p_wia_item){
     PropVariantClear(&varPages);
 }
 
-struct scan_settings_result display_scan_settings_dialog(struct device_select_result sel_res, bool single_image){
+
+struct scan_settings_result display_scan_settings_dialog(struct device_select_result sel_res, bool single_image, int intent){
 	scan_settings_result ret;
 	ret.error = false;
 	if(!sel_res.found){
@@ -86,14 +153,19 @@ struct scan_settings_result display_scan_settings_dialog(struct device_select_re
 	HWND current_window = FindMyTopMostWindow();
 	LONG item_count;
 	IWiaItem** ppIWiaItem;
-	LONG flags = 0; //intent flag - see http://msdn.microsoft.com/en-us/library/windows/desktop/ms630190(v=vs.85).aspx
+	LONG flags = WIA_DEVICE_DIALOG_USE_COMMON_UI; //intent flag - see http://msdn.microsoft.com/en-us/library/windows/desktop/ms630190(v=vs.85).aspx
+	LONG l_intent = intent;//text intent
+	printf("intent:%i\n", l_intent);
+	if(l_intent & WIA_INTENT_IMAGE_TYPE_TEXT){
+		printf("text indeed\n");
+	}
 	if(single_image){
 		flags|=WIA_DEVICE_DIALOG_SINGLE_IMAGE;
 	}
 	HRESULT hr = sel_res.p_wia_item->DeviceDlg(
         current_window,
-        WIA_DEVICE_DIALOG_USE_COMMON_UI,
         flags,
+        l_intent,
 		&item_count,
         &ppIWiaItem
     );
@@ -219,9 +291,12 @@ void custom_image::save_to_file(const char* file){
 
 
 std::vector<image> scan(scan_settings_result settings){
+	printf("called scan\n");
 	CComPtr<WiaWrap::CProgressDlg> pProgressDlg;
 	//HRESULT CALLBACK pfnProgressCallback = DefaultProgressCallback;
-	pProgressDlg = new WiaWrap::CProgressDlg(FindMyTopMostWindow());
+	HWND window = FindMyTopMostWindow();
+	pProgressDlg = new WiaWrap::CProgressDlg(NULL);
+	//pProgressDlg = new WiaWrap::CProgressDlg(NULL);
 	PVOID pProgressCallbackParam = (WiaWrap::CProgressDlg *) pProgressDlg;
 
     // Create the data callback interface

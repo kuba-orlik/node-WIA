@@ -10,6 +10,7 @@
 #include <sstream>
 #include <iostream>  
 #include <fstream>   
+#include <atlstr.h>
 
 #ifdef WIAWRAP_DLL_EXPORT
 #define WIAWRAP_API __declspec(dllexport) 
@@ -21,13 +22,21 @@ extern IWiaDevMgr* Manager;
 
 void init_wia_manager();
 
+struct image{
+	IStream* stream;
+	LONG size;
+	//char* char_array;
+	std::string strng;
+};
+
+
 device_select_result select_device(bool force_display_dialog);
 
 bool item_has_feeder(IWiaItem* p_wia_item);
 
 void tell_scanner_to_scan_all_pages(IWiaItem* p_wia_item);
 
-struct scan_settings_result display_scan_settings_dialog(struct device_select_result sel_res, bool single_image);
+struct scan_settings_result display_scan_settings_dialog(struct device_select_result sel_res, bool single_image=false, int intent=4);
 
 HRESULT CALLBACK DefaultProgressCallback(LONG   lStatus, LONG lPercentComplete, PVOID  pParam);
 

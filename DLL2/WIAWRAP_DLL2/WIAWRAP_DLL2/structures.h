@@ -8,11 +8,15 @@
 #ifndef structures
 #define structures
 
+#include <string>
+#include <string.h>
+#include <atlstr.h>
 
 struct device_select_result{
 	bool found;
-	BSTR device_id;
+	const char * device_id;
 	IWiaItem* p_wia_item;
+	const char* device_name;
 };
 
 

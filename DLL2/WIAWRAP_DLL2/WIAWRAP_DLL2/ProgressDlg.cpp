@@ -6,6 +6,7 @@ Copyright (c) Microsoft Corporation. All rights reserved.
 
 #include "stdafx.h"
 #include "resource.h"
+#include <string>
 
 #include "ProgressDlg.h"
 
@@ -176,18 +177,42 @@ VOID CProgressDlg::SetPercent(UINT nPercent)
 // CProgressDlg::ThreadProc
 //
 
-DWORD WINAPI CProgressDlg::ThreadProc(PVOID pParameter)
-{
+	std::string PrintLastErrorStdStr(){
+	  DWORD error = GetLastError();
+	  if (error){
+		LPVOID lpMsgBuf;
+		DWORD bufLen = FormatMessage(
+			FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+			FORMAT_MESSAGE_FROM_SYSTEM |
+			FORMAT_MESSAGE_IGNORE_INSERTS,
+			NULL,
+			error,
+			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+			(LPTSTR) &lpMsgBuf,
+			0, NULL );
+		if (bufLen){
+		  LPCSTR lpMsgStr = (LPCSTR)lpMsgBuf;
+		  std::string result(lpMsgStr, lpMsgStr+bufLen);      
+		  LocalFree(lpMsgBuf);
+		  printf("%s\n", result.c_str());
+		  return result;
+		}
+	  }
+	  return std::string();
+	}
+
+DWORD WINAPI CProgressDlg::ThreadProc(PVOID pParameter){
     CProgressDlg *that = (CProgressDlg *) pParameter;
 
     INT_PTR nResult = DialogBoxParam(
-        g_hInstance,
+        ::GetModuleHandle(L"WIAWRAP_DLL2"),
         MAKEINTRESOURCE(IDD_PROGRESS),
         that->m_hWndParent,
         DialogProc,
         (LPARAM) that
     );
-    
+	PrintLastErrorStdStr();
+	//DialogBox(::GetModuleHandle("T_Calc.dll"), MAKEINTRESOURCE(IDD_DIALOG1), NULL, (DLGPROC)Calculate::ToldDlgProc);
     return (DWORD) nResult;
 }                  
     
